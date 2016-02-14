@@ -4,6 +4,11 @@ Vote = new Mongo.Collection('vote');
 if (Meteor.isClient) {
   // counter starts at 0
 
+  Template.rating.rendered = function () {
+    // at .created() time, it's too early to run rateit(), so run it at rendered()
+    this.$('.rateit').rateit();
+  }
+
 Template.leaderboard.helpers({
   'player': function(){
     var currentUserId = Meteor.userId();
@@ -65,6 +70,15 @@ Template.addPlayerForm.helpers({
     var selectedPlayer = Session.get('selectedPlayer');
     return PlayersList.findOne(selectedPlayer);
   }
+});
+
+Template.rating.events({
+    'click .myrate': function(event, template){
+      var selectedPlayer = this._id;
+      var newRate = template.$('#myrate' + selectedPlayer).rateit('value');
+      PlayersList.update(selectedPlayer, {$set: {score: newRate} } );
+      console.log(selectedPlayer)
+    }
 });
 
 }

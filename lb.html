@@ -10,10 +10,11 @@
 
 
 <template name="leaderboard">
-    Hello World
+  Player ranking,
 	<ul>
     	{{#each player}}
-        	<li class="player {{selectedClass}}">{{name}}: {{score}}</li><br>
+        	<li class="player {{selectedClass}}">{{name}}: {{score}}:  </li><br>
+          {{> rating}}
         	{{> vote}} <hr>
     	{{/each}}
 	</ul>
@@ -26,6 +27,9 @@
 	{{> addPlayerForm}}
 </template>
 
+<template name="rating">
+  {{name}} is rated {{score}}:  <div class="rateit myrate" id=myrate{{_id}} data-rateit-value="{{score}}"></div>
+</template>
 
 <template name="vote">
     <div>
@@ -38,9 +42,9 @@
 <template name="addPlayerForm">
   {{#if currentUser}}
     <form>
-      <input type="text" name=playerName value={{showSelectedPlayer.name}}>
-      <input type="text" name=playerScore placeholder="Player score. Integer.">
-	  <input type="submit" value="Add Player">
+      <input type="text" name=playerName value={{showSelectedPlayer.name}} placeholder="New player name">
+      <input type="text" name=playerScore placeholder="Score: 1 to 5.">
+	    <input type="submit" value="Add Player">
     </form>
   {{/if}}
 </template>
