@@ -2,7 +2,7 @@ PlayersList = new Mongo.Collection('players');
 Vote = new Mongo.Collection('vote');
 
 if (Meteor.isClient) {
-  // counter starts at 0
+  Meteor.subscribe("thePlayers");
 
   Template.rating.rendered = function () {
     // at .created() time, it's too early to run rateit(), so run it at rendered()
@@ -12,7 +12,7 @@ if (Meteor.isClient) {
 Template.leaderboard.helpers({
   'player': function(){
     var currentUserId = Meteor.userId();
-    return PlayersList.find({createdBy:currentUserId},{sort:{score:-1, name:1}});
+    return PlayersList.find({},{sort:{score:-1, name:1}});
   },
   'selectedClass': function(){
     var playerId = this._id;
@@ -40,16 +40,16 @@ Template.leaderboard.events({
     },
     'click .increment': function(){
       var selectedPlayer = Session.get('selectedPlayer');
-      PlayersList.update(selectedPlayer, {$inc: {score: 5} } );
+      Meteor.call('modifyPlayerScore', selectedPlayer, 1);
     },
     'click .decrement': function(){
       var selectedPlayer = Session.get('selectedPlayer');
-      PlayersList.update(selectedPlayer, {$inc: {score: -5} } );
+      Meteor.call('modifyPlayerScore', selectedPlayer, -1);
     },
     'click .remove': function(){
       var selectedPlayer = Session.get('selectedPlayer');
       if (confirm("remove player ? " + PlayersList.findOne({_id:selectedPlayer}).name)) {
-        PlayersList.remove(selectedPlayer);
+        Meteor.call('removePlayerData', selectedPlayer);
       }
     }
 });
@@ -60,7 +60,7 @@ Template.addPlayerForm.events({
     var currentUserId = Meteor.userId();
     var playerNameVar = event.target.playerName.value;
     var playerScoreVar = parseInt(event.target.playerScore.value);
-    PlayersList.insert({name: playerNameVar, score:playerScoreVar, createdBy:currentUserId});
+    Meteor.call('insertPlayerData', playerNameVar, playerScoreVar);
     event.target.playerName.value = ""
   }
 });
@@ -100,5 +100,30 @@ if ( Vote.find().count() === 0 ) {
   Vote.insert({name: "Bill",   comment: "good"});
   Vote.insert({name: "Bill",   comment: "good"});
 }
+
+Meteor.publish("thePlayers", function() {
+  var currentUserId = this.userId
+  return PlayersList.find({createdBy:currentUserId});
+});
+
+Meteor.methods({
+  'insertPlayerData': function(playerNameVar,playerScoreVar){
+    var currentUserId = Meteor.userId();
+    PlayersList.insert({
+      name: playerNameVar,
+      score: playerScoreVar,
+      createdBy: currentUserId
+    })
+  },
+  'removePlayerData': function(selectedPlayer){
+    var currentUserId = Meteor.userId();
+    PlayersList.remove({_id:selectedPlayer, createdBy:currentUserId});
+  },
+  'modifyPlayerScore': function(selectedPlayer, scoreValue){
+    var currentUserId = Meteor.userId();
+    PlayersList.update({_id:selectedPlayer, createdBy:currentUserId}, {$inc: {score: scoreValue} });
+  }
+
+});
 
 }
